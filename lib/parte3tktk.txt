@@ -1,0 +1,133 @@
+----------------------------------------------
+------------video Full Player-----------------
+----------------------------------------------
+import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
+class VideoFullPlayer extends StatefulWidget {
+  final String nombre;
+  final String videoURL;
+  const VideoFullPlayer({super.key, 
+                        required this.nombre, 
+                        required this.videoURL});
+
+  @override
+  State<VideoFullPlayer> createState() => _VideoFullPlayerState();
+}
+
+class _VideoFullPlayerState extends State<VideoFullPlayer> {
+  late VideoPlayerController _controladorVideo;
+  late Future<void> _initializeVideoPlayerFuture;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // controladorVideo = VideoPlayerController.networkUrl(
+    //   Uri.parse(
+    //     'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+    //   ),
+    // );
+    // _initializeVideoPlayerFuture=controladorVideo.initialize();
+    _controladorVideo=VideoPlayerController.asset(widget.videoURL)
+    ..setVolume(0)
+    ..setLooping(true)
+    ..play();
+  }
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _controladorVideo.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _controladorVideo.initialize(),
+      builder: (context, snapshot){
+        if (snapshot.connectionState!=ConnectionState.done) {
+          return(const Center(child: CircularProgressIndicator(strokeWidth: 2,),));
+        }
+        return AspectRatio(
+          aspectRatio: _controladorVideo.value.aspectRatio,
+          child: Stack(
+            children: [
+              VideoPlayer(_controladorVideo),
+              Positioned(
+                bottom: 50,
+                left: 30,
+                child: _NombreVideo(descripcion: widget.nombre))
+            ],
+          ),);
+      },
+    );
+    
+  }
+}
+class _NombreVideo extends StatelessWidget {
+  final String descripcion;
+  const _NombreVideo({super.key, required this.descripcion});
+
+  @override
+  Widget build(BuildContext context) {
+    final ancho=MediaQuery.of(context).size;
+    final estiloTitulo=Theme.of(context).textTheme.titleLarge;
+    return SizedBox(
+      width: ancho.width*0.6,
+      child: Text(descripcion, maxLines: 2,style: estiloTitulo,));
+  }
+}
+
+----------------------------------------------
+------------video video scroll ver------------
+----------------------------------------------
+import 'package:flutter/material.dart';
+import 'package:tktk2/config/Screen/shared/video_botones.dart';
+import 'package:tktk2/config/Screen/shared/videofull_play.dart';
+import 'package:tktk2/config/data/videos.dart';
+
+class VideoScrollVer extends StatelessWidget {
+  final List<Videos> videoS;
+  const VideoScrollVer({super.key, required this.videoS});
+
+  @override
+  Widget build(BuildContext context) {
+    return PageView.builder(
+    scrollDirection: Axis.vertical,
+    physics: const BouncingScrollPhysics(),
+    itemCount: videoS.length,
+    itemBuilder: (context,index){
+      final Videos videos=videoS[index];
+      return Stack(
+        children: [
+          // videos+gradiente
+          SizedBox.expand(
+            // child:Container(color: Colors.red),
+            child: VideoFullPlayer(
+              nombre: videos.nombre, 
+              videoURL: videos.videoURL),
+          ),
+          // iconos o botones
+          Positioned(bottom: 40,
+          right: 20,
+          child: VideoBotones(videos: videos),
+          )
+        ],
+      );
+    },
+    );
+  }
+}
+
+----------------------------------------------
+------------formato visible-------------------
+----------------------------------------------
+import 'package:intl/intl.dart';
+
+class FormatosVisibles {
+  static String formatoVisibleNumeros(double numero){
+    final formatearNumero=NumberFormat.compactCurrency(
+      decimalDigits:0,
+      symbol: '').format(numero);
+      return formatearNumero;
+  }
+}
+
